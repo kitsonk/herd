@@ -1,6 +1,6 @@
 {
   "name": "@kitsonk/herd",
-  "version": "0.1.0.preview",
+  "version": "0.1.0-preview",
   "license": "MIT",
   "exports": "./mod.ts",
   "imports": {},
