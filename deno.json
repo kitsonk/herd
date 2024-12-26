@@ -1,0 +1,13 @@
+{
+  "name": "@kitsonk/herd",
+  "version": "0.1.0.preview",
+  "license": "MIT",
+  "exports": "./mod.ts",
+  "imports": {},
+  "tasks": {
+    "check": "deno fmt --check && deno lint && deno check --doc *.ts",
+    "coverage": "deno coverage --lcov --output=cov.lcov ./cov",
+    "test": "deno test --allow-read --allow-write --unstable-kv --parallel",
+    "test:ci": "deno test --allow-read --allow-write --unstable-kv --coverage=./cov --parallel"
+  }
+}
