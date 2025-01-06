@@ -5,7 +5,7 @@ import { Context } from "./context.ts";
 import { Router } from "./router.ts";
 
 Deno.test("Context constructor", async () => {
-  const db = await Deno.openKv();
+  const db = await Deno.openKv(await Deno.makeTempFile());
   const router = new Router(db);
   const context = new Context("/", {}, {}, {}, router);
   assertEquals(context.path, "/");

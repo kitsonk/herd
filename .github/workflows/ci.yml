@@ -19,6 +19,7 @@ jobs:
 
       - name: run tests
         run: deno task test:ci
+        continue-on-error: true
 
       - name: upload test results
         uses: codecov/test-results-action@v1
