@@ -5,12 +5,14 @@ import { Context } from "./context.ts";
 import { Router } from "./router.ts";
 
 Deno.test("Context constructor", async () => {
-  const router = new Router(await Deno.openKv());
+  const db = await Deno.openKv();
+  const router = new Router(db);
   const context = new Context("/", {}, {}, {}, router);
   assertEquals(context.path, "/");
   assertEquals(context.body, {});
   assertEquals(context.headers, {});
   assertEquals(context.params, {});
   assertStrictEquals(context.router, router);
-  context.router.db.close();
+  assertStrictEquals(context.db, db);
+  db.close();
 });
