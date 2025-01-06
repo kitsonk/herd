@@ -27,7 +27,7 @@ jobs:
 
       - name: generate coverage report
         run: deno task coverage
-  
+
       - name: upload coverage
         uses: codecov/codecov-action@v5
         with:
