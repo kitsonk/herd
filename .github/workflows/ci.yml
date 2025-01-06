@@ -23,6 +23,11 @@ jobs:
       - name: generate coverage report
         run: deno task coverage
 
+      - name: upload test results
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
       - name: upload coverage
         uses: codecov/codecov-action@v4
         with:
