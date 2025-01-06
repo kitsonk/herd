@@ -1,63 +1,44 @@
-interface EnqueueInit {
-  body?: unknown;
-  headers?: Record<string, string>;
-}
+/**
+ * # herd
+ *
+ * A message queue router for Deno KV queues.
+ *
+ * ## Logging
+ *
+ * This package uses the [`@logtape/logtape`](https://logtape.org/) library for
+ * logging. To enable logging check out the LogTape
+ * [Quick Start](https://logtape.org/manual/start). This package uses the
+ * category `herd` for logging.
+ *
+ * @module
+ */
 
-interface Enqueue {
-  (path: string, init?: EnqueueInit): void;
-}
+import { getLogger } from "@logtape/logtape";
 
-interface Listen {
-  (): void;
-}
+import { Router, type RouterOptions } from "./router.ts";
 
-interface Plugin {
-  init(router: Router): void;
-}
+export type { Context } from "./context.ts";
+export type { Plugin, PluginOptions, Router, RouterOptions } from "./router.ts";
+export type {
+  Enqueue,
+  EnqueueInit,
+  Handler,
+  Message,
+  ParamsDictionary,
+} from "./types.ts";
 
-interface PluginOptions {
-  prefix: string;
-}
+const logger = getLogger(["herd"]);
+const routerMap = new WeakMap<Deno.Kv, Router>();
 
-interface Handler<
-  Body = unknown,
-  Headers extends Record<string, string> = Record<string, string>,
-> {
-  (context: Context<Body, Headers>): void;
-}
-
-class Context<
-  Body = unknown,
-  Headers extends Record<string, string> = Record<string, string>,
-> {
-  get db(): Deno.Kv {
-    return new Deno.Kv();
+async function getRouter(
+  db?: Deno.Kv | string,
+  options?: RouterOptions,
+): Promise<Router> {
+  db = await resolveDb(db);
+  if (routerMap.has(db) && options) {
+    logger.warn("Router already initialized with options, ignoring.");
   }
-
-  get path(): string {
-    return "";
-  }
-
-  get body(): Body {
-    return undefined as Body;
-  }
-
-  get headers(): Headers {
-    return {} as Headers;
-  }
-}
-
-class Route {}
-
-class Router {
-  constructor() {}
-
-  on<
-    Body = unknown,
-    Headers extends Record<string, string> = Record<string, string>,
-  >(path: string, handler: Handler<Body, Headers>): void {}
-
-  register(plugin: Plugin, options?: PluginOptions): void {}
+  return routerMap.get(db) ?? setRouter(db, options);
 }
 
 function resolveDb(db?: Deno.Kv | string): Promise<Deno.Kv> {
@@ -67,31 +48,18 @@ function resolveDb(db?: Deno.Kv | string): Promise<Deno.Kv> {
   return Deno.openKv(db);
 }
 
-export async function init(
+function setRouter(db: Deno.Kv, options: RouterOptions = {}): Router {
+  const router = new Router(db, options);
+  routerMap.set(db, router);
+  return router;
+}
+
+/**
+ * Initialize a router (or get an existing one) for the given KV store.
+ */
+export function init(
   db?: Deno.Kv | string,
-): Promise<{ router: Router; listen: Listen; enqueue: Enqueue }> {
-  db = await resolveDb(db);
-  return {
-    router: await getRouter(db),
-    listen: await getListen(db),
-    enqueue: await getEnqueue(db),
-  };
-}
-
-const enqueueMap = new Map<Deno.Kv, Enqueue>();
-
-export function getEnqueue(db?: Deno.Kv | string): Promise<Enqueue> {
-  return Promise.resolve((_path: string, _payload: unknown) => {});
-}
-
-const listenMap = new Map<Deno.Kv, Listen>();
-
-export function getListen(db?: Deno.Kv | string): Promise<Listen> {
-  return Promise.resolve(() => {});
-}
-
-const routerMap = new Map<Deno.Kv, Router>();
-
-export function getRouter(db?: Deno.Kv | string): Promise<Router> {
-  return Promise.resolve(new Router());
+  options?: RouterOptions,
+): Promise<Router> {
+  return getRouter(db, options);
 }
